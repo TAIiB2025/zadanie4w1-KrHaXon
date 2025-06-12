@@ -2,11 +2,13 @@ import { Injectable } from '@angular/core';
 import { Ksiazka } from '../models/ksiazka';
 import { Observable, of } from 'rxjs';
 import { KsiazkaBody } from '../models/ksiazka-body';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ListaService {
+  /*
   private static idGen = 1;
 
   private lista: Ksiazka[] = [
@@ -60,5 +62,30 @@ export class ListaService {
     this.lista.push(ksiazka);
 
     return of(undefined);
+  }*/
+  private readonly apiUrl = 'http://localhost:5005/api/książka';
+  constructor(private http: HttpClient) {}
+
+  get(): Observable<Ksiazka[]> {
+    return this.http.get<Ksiazka[]>(this.apiUrl);
   }
+  getByTytul(fraza: string): Observable<Ksiazka[]> {
+    return this.http.get<Ksiazka[]>(this.apiUrl + '/tytul', { params: { fraza } });
+  }
+  getByID(id: number): Observable<Ksiazka> {
+    return this.http.get<Ksiazka>(`${this.apiUrl}/${id}`);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  put(id: number, body: KsiazkaBody): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, body);
+  }
+
+  post(body: KsiazkaBody): Observable<void> {
+    return this.http.post<void>(this.apiUrl, body);
+  }
+  
 }
