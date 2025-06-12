@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using WebAPI.BLL;
 using WebAPI.BLL.ModelsDTO;
 using WebAPI.BLL_Memory.Extensions;
@@ -8,6 +9,7 @@ namespace WebAPI.BLL_Memory
 {
     public class KsiążkaService : IKsiązkaService
     {
+        private static readonly string[] DozwoloneGatunki = { "fantasy", "romans", "dystopia" };
         private static int IdGen = 1;
         private static readonly List<Książka> ksiazkiDbSet =
             [
@@ -67,6 +69,7 @@ namespace WebAPI.BLL_Memory
         }
         public void Post(KsiążkaPostDTO książkaPostDTO)
         {
+            ValidateKsiążkaDTO(książkaPostDTO);
             Książka książka = new()
             {
                 Tytul = książkaPostDTO.Tytul,
@@ -90,7 +93,7 @@ namespace WebAPI.BLL_Memory
             var ksiazka = ksiazkiDbSet.FirstOrDefault(k => k.Id == id);
             if (ksiazka is null)
                 throw new ApplicationException($"Nie znaleziono książki o ID = {id}");
-
+            ValidateKsiążkaDTO(książkaPostDTO);
             ksiazka.Tytul = książkaPostDTO.Tytul;
             ksiazka.Autor = książkaPostDTO.Autor;
             ksiazka.Gatunek = książkaPostDTO.Gatunek;
@@ -101,6 +104,23 @@ namespace WebAPI.BLL_Memory
             return ksiazkiDbSet
             .Where(k => k.Tytul.Contains(fraza, StringComparison.OrdinalIgnoreCase))
             .Select(k => k.ToKsiążkaDTO());
+        }
+        private void ValidateKsiążkaDTO(KsiążkaPostDTO dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Tytul))
+                throw new ArgumentException("Tytuł jest wymagany.");
+
+            if (dto.Tytul.Length > 100)
+                throw new ArgumentException("Tytuł może mieć maksymalnie 100 znaków.");
+
+            if (string.IsNullOrWhiteSpace(dto.Gatunek))
+                throw new ArgumentException("Gatunek jest wymagany.");
+
+            if (!DozwoloneGatunki.Contains(dto.Gatunek.ToLower()))
+                throw new ArgumentException("Gatunek musi być jednym z: fantasy, romans, dystopia.");
+
+            if (dto.Rok > 2025)
+                throw new ArgumentException("Rok nie może być większy niż 2025.");
         }
     }
 }

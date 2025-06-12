@@ -2,6 +2,7 @@
 using WebAPI.BLL.ModelsDTO;
 using WebAPI.BLL;
 using WebAPI.BLL_Memory;
+using WebAPI.DAL.Models;
 
 namespace WebAPI.Controllers
 {
@@ -9,6 +10,8 @@ namespace WebAPI.Controllers
     [Route("api/[controller]")]
     public class KsiążkaController : Controller
     {
+        private static readonly string[] DozwoloneGatunki = { "fantasy", "romans", "dystopia" };
+
         private readonly IKsiązkaService _ksiązkaService;
 
         public KsiążkaController(IKsiązkaService ksiązkaService)
@@ -38,17 +41,28 @@ namespace WebAPI.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] KsiążkaPostDTO dto)
         {
-            _ksiązkaService.Post(dto);
-            return CreatedAtAction(nameof(GetById), new { id = dto }, null);
-        }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] KsiążkaPostDTO dto)
+            if (!DozwoloneGatunki.Contains(dto.Gatunek.ToLower()))
+                return BadRequest("Gatunek musi być jednym z: fantasy, romans, dystopia.");
+
+            _ksiązkaService.Post(dto);
+            return Ok(dto);
+        }
+            [HttpPut("{id}")]
+            public IActionResult Put(int id, [FromBody] KsiążkaPostDTO dto)
         {
             try
             {
+                if(!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                if (!DozwoloneGatunki.Contains(dto.Gatunek.ToLower()))
+                    return BadRequest("Gatunek musi być jednym z: fantasy, romans, dystopia.");
+
                 _ksiązkaService.Put(id, dto);
-                return NoContent();
+                return Ok(dto);
             }
             catch (ApplicationException ex)
             {
@@ -69,7 +83,7 @@ namespace WebAPI.Controllers
                 return NotFound(ex.Message);
             }
         }
-        [HttpGet("szukaj")]
+        [HttpGet("{tytul}")]
         public ActionResult<IEnumerable<KsiążkaDTO>> GetByTytul([FromQuery] string? fraza)
         {
             return Ok(_ksiązkaService.GetByTytul(fraza));

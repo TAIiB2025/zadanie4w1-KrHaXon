@@ -1,6 +1,10 @@
 <div>
     <a routerLink="form">Dodaj</a>
 </div>
+<div>
+    <input type="text" ([ngModel])="fraza" placeholder="Szukaj po tytule..." />
+    <button (click)="szukaj()">Szukaj</button>
+  </div>
 <hr />
 <table border="1">
     <thead>

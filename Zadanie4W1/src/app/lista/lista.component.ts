@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { ListaService } from '../lista.service';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Ksiazka } from '../../models/ksiazka';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -12,10 +12,25 @@ import { RouterLink } from '@angular/router';
   styleUrl: './lista.component.css'
 })
 export class ListaComponent {
-  private readonly listaService = inject(ListaService);
-  public dane$: Observable<Ksiazka[]>;
+  dane$: Observable<Ksiazka[]> = of([]);
+  fraza: string = '';
 
-  constructor() {
+  constructor(private listaService: ListaService) {}
+
+  ngOnInit(): void {
+    this.pobierzWszystkie();
+  }
+
+  pobierzWszystkie() {
     this.dane$ = this.listaService.get();
   }
+
+  szukaj() {
+    if (!this.fraza || this.fraza.trim() === '') {
+      this.pobierzWszystkie();
+    } else {
+      this.dane$ = this.listaService.getByTytul(this.fraza.trim());
+    }
+  }
+  
 }
